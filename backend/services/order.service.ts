@@ -2,6 +2,13 @@ import { database } from "../database";
 import type { OrderStatus } from "../order-status";
 import { ORDER_STATUS_TRANSITIONS } from "../order-status-transitions";
 
+import type {
+   GetOrdersQuery,
+   OrderListItem,
+   OrderSortField,
+   SortDirection,
+} from "../database/orders/order.types";
+
 const calculateOrderTotal = (orderId: number): number => {
    return database.orderItems
       .filter((item) => item.orderId === orderId)
@@ -17,12 +24,115 @@ const getCustomer = (customerId: number) => {
    );
 };
 
-export const getOrders = () => {
+const getOrderList = (): OrderListItem[] => {
    return database.orders.map((order) => ({
       ...order,
       customer: getCustomer(order.customerId),
       totalAmount: calculateOrderTotal(order.id),
    }));
+};
+
+const getOrderSortValue = (
+   order: OrderListItem,
+   sortBy: OrderSortField,
+): string | number => {
+   switch (sortBy) {
+      case "customer":
+         return order.customer
+            ? `${order.customer.firstName} ${order.customer.lastName}`
+            : "";
+
+      case "totalAmount":
+         return order.totalAmount;
+
+      case "orderNumber":
+         return order.orderNumber;
+
+      case "status":
+         return order.status;
+
+      case "createdAt":
+         return order.createdAt;
+   }
+};
+
+const compareValues = (
+   firstValue: string | number,
+   secondValue: string | number,
+   direction: SortDirection,
+): number => {
+   const comparison =
+      typeof firstValue === "number" &&
+         typeof secondValue === "number"
+         ? firstValue - secondValue
+         : String(firstValue).localeCompare(
+            String(secondValue),
+            "pl",
+         );
+
+   return direction === "asc" ? comparison : -comparison;
+};
+
+export const getOrders = ({
+   page,
+   pageSize,
+   search,
+   status,
+   sortBy = "createdAt",
+   sortDirection = "desc",
+}: GetOrdersQuery) => {
+   const normalizedSearch = search?.trim().toLowerCase();
+
+   const orders = getOrderList()
+      .filter((order) => {
+         if (status && order.status !== status) {
+            return false;
+         }
+
+         if (!normalizedSearch) {
+            return true;
+         }
+
+         const customerName = order.customer
+            ? `${order.customer.firstName} ${order.customer.lastName}`
+            : "";
+
+         return (
+            order.orderNumber
+               .toLowerCase()
+               .includes(normalizedSearch) ||
+            customerName
+               .toLowerCase()
+               .includes(normalizedSearch) ||
+            order.customer?.email
+               .toLowerCase()
+               .includes(normalizedSearch)
+         );
+      })
+      .sort((firstOrder, secondOrder) =>
+         compareValues(
+            getOrderSortValue(firstOrder, sortBy),
+            getOrderSortValue(secondOrder, sortBy),
+            sortDirection,
+         ),
+      );
+
+   const totalItems = orders.length;
+   const totalPages = Math.ceil(totalItems / pageSize);
+   const startIndex = (page - 1) * pageSize;
+
+   return {
+      data: orders.slice(
+         startIndex,
+         startIndex + pageSize,
+      ),
+      pagination: {
+         page,
+         pageSize,
+         totalItems,
+         totalPages,
+      },
+   };
 };
 
 export const getOrderDetails = (orderId: number) => {
@@ -139,7 +249,8 @@ export const getOrderStats = () => ({
 
    byStatus: database.orders.reduce<Record<string, number>>(
       (result, order) => {
-         result[order.status] = (result[order.status] ?? 0) + 1;
+         result[order.status] =
+            (result[order.status] ?? 0) + 1;
          return result;
       },
       {},
