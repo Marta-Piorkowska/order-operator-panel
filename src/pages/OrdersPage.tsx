@@ -1,44 +1,40 @@
-import { useNavigate } from "@tanstack/react-router";
 import {
-   Box,
-   Button,
+   Paper,
    Typography,
 } from "@mui/material";
 
-import {
-   clearAuth,
-   getAuth,
-} from "../features/auth/auth.storage";
+import { DashboardLayout } from "./DashboardLayout";
 
 export const OrdersPage = () => {
-   const navigate = useNavigate();
-   const auth = getAuth();
-
-   const handleLogout = async () => {
-      clearAuth();
-
-      await navigate({
-         to: "/login",
-         replace: true,
-      });
-   };
-
    return (
-      <Box sx={{ p: 4 }}>
-         <Typography variant="h4" gutterBottom>
+      <DashboardLayout>
+         <Typography
+            variant="h4"
+            component="h1"
+            fontWeight={700}
+            gutterBottom
+         >
             Zamówienia
          </Typography>
 
-         <Typography sx={{ mb: 2 }}>
-            Zalogowano jako: {auth?.user.username}
+         <Typography
+            color="text.secondary"
+            sx={{ mb: 3 }}
+         >
+            Zarządzaj zamówieniami klientów.
          </Typography>
 
-         <Button
+         <Paper
             variant="outlined"
-            onClick={handleLogout}
+            sx={{
+               p: 3,
+               minHeight: 320,
+            }}
          >
-            Wyloguj
-         </Button>
-      </Box>
+            <Typography color="text.secondary">
+               Tutaj pojawi się tabela zamówień.
+            </Typography>
+         </Paper>
+      </DashboardLayout>
    );
 };
