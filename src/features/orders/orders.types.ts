@@ -29,15 +29,18 @@ export const OrderStatus = {
    },
 } as const;
 
-export type OrderStatus =
-   (typeof OrderStatus)[keyof typeof OrderStatus];
+export type OrderStatus = keyof typeof OrderStatus;
+
+export const OrderSortField = [
+   "orderNumber",
+   "customer",
+   "status",
+   "totalAmount",
+   "createdAt",
+] as const;
 
 export type OrderSortField =
-   | "orderNumber"
-   | "customer"
-   | "status"
-   | "totalAmount"
-   | "createdAt";
+   (typeof OrderSortField)[number];
 
 export type SortDirection = "asc" | "desc";
 
@@ -45,7 +48,11 @@ export interface GetOrdersQuery {
    page: number;
    pageSize: number;
    search?: string;
-   status?: OrderStatus;
+   status?: OrderStatus[];
+   minPrice?: number;
+   maxPrice?: number;
+   dateFrom?: string;
+   dateTo?: string;
    sortBy?: OrderSortField;
    sortDirection?: SortDirection;
 }

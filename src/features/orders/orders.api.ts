@@ -6,11 +6,24 @@ import type {
 const createSearchParams = (
    query: GetOrdersQuery,
 ): URLSearchParams => {
-   const entries = Object.entries(query)
-      .filter(([, value]) => value !== undefined && value !== "")
-      .map(([key, value]) => [key, String(value)]);
+   const searchParams = new URLSearchParams();
 
-   return new URLSearchParams(entries);
+   Object.entries(query).forEach(([key, value]) => {
+      if (value === undefined || value === "") {
+         return;
+      }
+
+      if (Array.isArray(value)) {
+         value.forEach((item) => {
+            searchParams.append(key, item);
+         });
+         return;
+      }
+
+      searchParams.append(key, String(value));
+   });
+
+   return searchParams;
 };
 
 export const getOrders = async (

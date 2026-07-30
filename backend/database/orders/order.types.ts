@@ -29,7 +29,11 @@ export interface GetOrdersQuery {
    page: number;
    pageSize: number;
    search?: string;
-   status?: OrderStatus;
+   status?: OrderStatus[];
+   minPrice?: number;
+   maxPrice?: number;
+   dateFrom?: string;
+   dateTo?: string;
    sortBy?: OrderSortField;
    sortDirection?: SortDirection;
 }

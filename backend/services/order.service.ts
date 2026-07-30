@@ -78,14 +78,48 @@ export const getOrders = ({
    pageSize,
    search,
    status,
+   minPrice,
+   maxPrice,
+   dateFrom,
+   dateTo,
    sortBy = "createdAt",
    sortDirection = "desc",
 }: GetOrdersQuery) => {
-   const normalizedSearch = search?.trim().toLowerCase();
+   const normalizedSearch = search
+      ?.trim()
+      .toLowerCase();
 
    const orders = getOrderList()
       .filter((order) => {
-         if (status && order.status !== status) {
+         if (
+            status &&
+            status.length > 0 &&
+            !status.includes(order.status)
+         ) {
+            return false;
+         }
+
+         if (
+            minPrice !== undefined &&
+            order.totalAmount < minPrice
+         ) {
+            return false;
+         }
+
+         if (
+            maxPrice !== undefined &&
+            order.totalAmount > maxPrice
+         ) {
+            return false;
+         }
+
+         const orderDate = order.createdAt.slice(0, 10);
+
+         if (dateFrom && orderDate < dateFrom) {
+            return false;
+         }
+
+         if (dateTo && orderDate > dateTo) {
             return false;
          }
 
@@ -118,8 +152,17 @@ export const getOrders = ({
       );
 
    const totalItems = orders.length;
-   const totalPages = Math.ceil(totalItems / pageSize);
-   const startIndex = (page - 1) * pageSize;
+   const totalPages = Math.ceil(
+      totalItems / pageSize,
+   );
+
+   const safePage =
+      totalPages > 0
+         ? Math.min(page, totalPages)
+         : 1;
+
+   const startIndex =
+      (safePage - 1) * pageSize;
 
    return {
       data: orders.slice(
@@ -127,7 +170,7 @@ export const getOrders = ({
          startIndex + pageSize,
       ),
       pagination: {
-         page,
+         page: safePage,
          pageSize,
          totalItems,
          totalPages,

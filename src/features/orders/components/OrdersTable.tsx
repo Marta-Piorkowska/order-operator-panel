@@ -3,6 +3,12 @@ import {
    getCoreRowModel,
    useReactTable,
 } from "@tanstack/react-table";
+
+import type {
+   OnChangeFn,
+   SortingState,
+} from "@tanstack/react-table";
+
 import {
    Paper,
    Table,
@@ -22,6 +28,8 @@ interface OrdersTableProps {
    page: number;
    pageSize: number;
    totalItems: number;
+   sorting: SortingState;
+   onSortingChange: OnChangeFn<SortingState>;
    onPageChange: (page: number) => void;
    onPageSizeChange: (pageSize: number) => void;
 }
@@ -31,12 +39,22 @@ export const OrdersTable = ({
    page,
    pageSize,
    totalItems,
+   sorting,
+   onSortingChange,
    onPageChange,
    onPageSizeChange,
 }: OrdersTableProps) => {
    const table = useReactTable({
       data,
       columns: ordersTableColumns,
+
+      state: {
+         sorting,
+      },
+
+      onSortingChange,
+      manualSorting: true,
+
       getCoreRowModel: getCoreRowModel(),
    });
 
@@ -45,33 +63,42 @@ export const OrdersTable = ({
          <TableContainer>
             <Table>
                <TableHead>
-                  {table.getHeaderGroups().map((headerGroup) => (
-                     <TableRow key={headerGroup.id}>
-                        {headerGroup.headers.map((header) => (
-                           <TableCell key={header.id}>
-                              {header.isPlaceholder
-                                 ? null
-                                 : flexRender(
-                                    header.column.columnDef.header,
-                                    header.getContext(),
-                                 )}
-                           </TableCell>
-                        ))}
-                     </TableRow>
-                  ))}
+                  {table
+                     .getHeaderGroups()
+                     .map((headerGroup) => (
+                        <TableRow key={headerGroup.id}>
+                           {headerGroup.headers.map(
+                              (header) => (
+                                 <TableCell key={header.id}>
+                                    {header.isPlaceholder
+                                       ? null
+                                       : flexRender(
+                                          header.column
+                                             .columnDef
+                                             .header,
+                                          header.getContext(),
+                                       )}
+                                 </TableCell>
+                              ),
+                           )}
+                        </TableRow>
+                     ))}
                </TableHead>
 
                <TableBody>
                   {table.getRowModel().rows.map((row) => (
                      <TableRow key={row.id}>
-                        {row.getVisibleCells().map((cell) => (
-                           <TableCell key={cell.id}>
-                              {flexRender(
-                                 cell.column.columnDef.cell,
-                                 cell.getContext(),
-                              )}
-                           </TableCell>
-                        ))}
+                        {row
+                           .getVisibleCells()
+                           .map((cell) => (
+                              <TableCell key={cell.id}>
+                                 {flexRender(
+                                    cell.column.columnDef
+                                       .cell,
+                                    cell.getContext(),
+                                 )}
+                              </TableCell>
+                           ))}
                      </TableRow>
                   ))}
                </TableBody>
@@ -92,7 +119,9 @@ export const OrdersTable = ({
                onPageChange(nextPage + 1);
             }}
             onRowsPerPageChange={(event) => {
-               onPageSizeChange(Number(event.target.value));
+               onPageSizeChange(
+                  Number(event.target.value),
+               );
             }}
          />
       </Paper>

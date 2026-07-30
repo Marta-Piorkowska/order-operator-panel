@@ -1,4 +1,4 @@
-import { Chip } from "@mui/material";
+import { Chip, TableSortLabel } from "@mui/material";
 import type { ColumnDef } from "@tanstack/react-table";
 
 import {
@@ -25,7 +25,6 @@ export const ordersTableColumns: ColumnDef<OrderListItem>[] = [
       header: "Status",
       cell: ({ getValue }) => {
          const status = getValue<keyof typeof OrderStatus>();
-         console.log(status);
 
          return (
             <Chip
@@ -39,7 +38,19 @@ export const ordersTableColumns: ColumnDef<OrderListItem>[] = [
    },
    {
       accessorKey: "totalAmount",
-      header: "Wartość",
+      header: ({ column }) => (
+         <TableSortLabel
+            active={column.getIsSorted() !== false}
+            direction={
+               column.getIsSorted() === "asc"
+                  ? "asc"
+                  : "desc"
+            }
+            onClick={column.getToggleSortingHandler()}
+         >
+            Wartość
+         </TableSortLabel>
+      ),
       cell: ({ getValue }) => {
          const value = getValue<number>();
 
@@ -48,10 +59,23 @@ export const ordersTableColumns: ColumnDef<OrderListItem>[] = [
             currency: "PLN",
          }).format(value);
       },
+      enableSorting: true,
    },
    {
       accessorKey: "createdAt",
-      header: "Data utworzenia",
+      header: ({ column }) => (
+         <TableSortLabel
+            active={column.getIsSorted() !== false}
+            direction={
+               column.getIsSorted() === "asc"
+                  ? "asc"
+                  : "desc"
+            }
+            onClick={column.getToggleSortingHandler()}
+         >
+            Data utworzenia
+         </TableSortLabel>
+      ),
       cell: ({ getValue }) => {
          const value = getValue<string>();
 
@@ -59,5 +83,6 @@ export const ordersTableColumns: ColumnDef<OrderListItem>[] = [
             new Date(value),
          );
       },
+      enableSorting: true,
    },
 ];

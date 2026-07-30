@@ -39,6 +39,20 @@ const isSortDirection = (
    return value === "asc" || value === "desc";
 };
 
+const parseOptionalNumber = (
+   value: string | null,
+): number | undefined => {
+   if (value === null || value === "") {
+      return undefined;
+   }
+
+   const parsedValue = Number(value);
+
+   return Number.isFinite(parsedValue)
+      ? parsedValue
+      : undefined;
+};
+
 const parseOrdersQuery = (
    url: URL,
 ): GetOrdersQuery => {
@@ -47,10 +61,18 @@ const parseOrdersQuery = (
       url.searchParams.get("pageSize"),
    );
 
-   const statusParam = url.searchParams.get("status");
+   const statusParams = url.searchParams.getAll("status");
    const sortByParam = url.searchParams.get("sortBy");
    const sortDirectionParam =
       url.searchParams.get("sortDirection");
+
+   const minPriceParam = parseOptionalNumber(
+      url.searchParams.get("minPrice"),
+   );
+
+   const maxPriceParam = parseOptionalNumber(
+      url.searchParams.get("maxPrice"),
+   );
 
    return {
       page:
@@ -69,10 +91,25 @@ const parseOrdersQuery = (
             .get("search")
             ?.trim() || undefined,
 
-      status:
-         statusParam && isOrderStatus(statusParam)
-            ? statusParam
+      status: statusParams.filter(isOrderStatus),
+
+      minPrice:
+         minPriceParam !== undefined &&
+            minPriceParam >= 0
+            ? minPriceParam
             : undefined,
+
+      maxPrice:
+         maxPriceParam !== undefined &&
+            maxPriceParam >= 0
+            ? maxPriceParam
+            : undefined,
+
+      dateFrom:
+         url.searchParams.get("dateFrom") || undefined,
+
+      dateTo:
+         url.searchParams.get("dateTo") || undefined,
 
       sortBy:
          sortByParam && isOrderSortField(sortByParam)
